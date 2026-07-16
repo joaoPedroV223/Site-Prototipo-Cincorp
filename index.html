@@ -982,12 +982,19 @@ input:focus,textarea:focus,select:focus{
         <div class="grid three">
           <div><label>Nome</label><input id="ctC1Nome"></div>
           <div><label>Nacionalidade</label><input id="ctC1Nac" value="Brasileira"></div>
-          <div><label>Estado civil/regime</label><input id="ctC1EstadoCivil" placeholder="Ex.: Casado sob regime de comunhão parcial de bens"></div>
+          <div><label>Estado civil*</label><select id="ctC1EstadoCivil">
+            <option value="">Selecione</option>
+            <option>Casado(a)</option>
+            <option>Divorciado(a)</option>
+            <option>Separado(a)</option>
+            <option>Solteiro(a)</option>
+            <option>Viúvo(a)</option>
+          </select></div>
           <div><label>Profissão</label><input id="ctC1Profissao"></div>
-          <div><label>CPF</label><input id="ctC1Cpf"></div>
+          <div><label>CPF</label><input id="ctC1Cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric"></div>
           <div><label>Carteira de identidade</label><input id="ctC1Rg"></div>
           <div><label>E-mail</label><input id="ctC1Email"></div>
-          <div><label>Telefone</label><input id="ctC1Telefone"></div>
+          <div><label>Telefone</label><input id="ctC1Telefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric"></div>
           <div class="span-3"><label>Endereço</label><input id="ctC1Endereco"></div>
         </div>
       </div>
@@ -998,12 +1005,19 @@ input:focus,textarea:focus,select:focus{
         <div class="grid three">
           <div><label>Nome</label><input id="ctC2Nome"></div>
           <div><label>Nacionalidade</label><input id="ctC2Nac" value="Brasileira"></div>
-          <div><label>Estado civil/regime</label><input id="ctC2EstadoCivil"></div>
+          <div><label>Estado civil</label><select id="ctC2EstadoCivil">
+            <option value="">Selecione</option>
+            <option>Casado(a)</option>
+            <option>Divorciado(a)</option>
+            <option>Separado(a)</option>
+            <option>Solteiro(a)</option>
+            <option>Viúvo(a)</option>
+          </select></div>
           <div><label>Profissão</label><input id="ctC2Profissao"></div>
-          <div><label>CPF</label><input id="ctC2Cpf"></div>
+          <div><label>CPF</label><input id="ctC2Cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric"></div>
           <div><label>Carteira de identidade</label><input id="ctC2Rg"></div>
           <div><label>E-mail</label><input id="ctC2Email"></div>
-          <div><label>Telefone</label><input id="ctC2Telefone"></div>
+          <div><label>Telefone</label><input id="ctC2Telefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric"></div>
           <div class="span-3"><label>Endereço</label><input id="ctC2Endereco"></div>
         </div>
       </div>
@@ -1040,9 +1054,9 @@ input:focus,textarea:focus,select:focus{
         <h3>Assinaturas e testemunhas</h3>
         <div class="grid three">
           <div><label>Testemunha 1 - nome</label><input id="ctTest1Nome"></div>
-          <div><label>Testemunha 1 - CPF</label><input id="ctTest1Cpf"></div>
+          <div><label>Testemunha 1 - CPF</label><input id="ctTest1Cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric"></div>
           <div><label>Testemunha 2 - nome</label><input id="ctTest2Nome"></div>
-          <div><label>Testemunha 2 - CPF</label><input id="ctTest2Cpf"></div>
+          <div><label>Testemunha 2 - CPF</label><input id="ctTest2Cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric"></div>
         </div>
       </div>
 
@@ -1267,6 +1281,31 @@ function mostrarStatus(titulo, detalhe, tipo='info'){
   clearTimeout(window.__statusTimer);
   window.__statusTimer = setTimeout(()=>el.classList.remove('show'), tipo==='erro'?5200:3600);
 }
+
+function apenasDigitos(v){ return String(v||'').replace(/\D/g,''); }
+function formatarCpfCampo(v){
+  const d=apenasDigitos(v).slice(0,11);
+  return d.replace(/^(\d{3})(\d)/,'$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/,'$1.$2.$3').replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/,'$1.$2.$3-$4');
+}
+function formatarTelefoneCampo(v){
+  const d=apenasDigitos(v).slice(0,11);
+  if(d.length<=10) return d.replace(/^(\d{2})(\d)/,'($1) $2').replace(/(\d{4})(\d)/,'$1-$2');
+  return d.replace(/^(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2');
+}
+function aplicarMascaraInput(id, tipo){
+  const el=$(id);
+  if(!el) return;
+  const formatar = tipo==='cpf' ? formatarCpfCampo : formatarTelefoneCampo;
+  const aplicar = ()=>{ el.value = formatar(el.value); };
+  el.addEventListener('input', aplicar);
+  el.addEventListener('blur', aplicar);
+  aplicar();
+}
+function iniciarMascarasContrato(){
+  ['ctC1Cpf','ctC2Cpf','ctTest1Cpf','ctTest2Cpf'].forEach(id=>aplicarMascaraInput(id,'cpf'));
+  ['ctC1Telefone','ctC2Telefone'].forEach(id=>aplicarMascaraInput(id,'telefone'));
+}
+
 function iniciarInteracoesVisuais(){
   const blob = $('cursorBlob');
   let raf = null, x = innerWidth*.5, y = innerHeight*.5;
@@ -1323,6 +1362,7 @@ function init(){
   inicializarFolhas();
   aplicarDadosObra();
   renderEmpresas();
+  iniciarMascarasContrato();
   attachEvents();
   preencherProximoNumero();
   renderAll();
@@ -2238,7 +2278,7 @@ function criarRecibos(){
         obraKey:$('obraRecibo').value, obraNome:obra.nome, obraAbrev:obra.abrev, localObra:$('localObra').value || obra.local, cnpj:$('cnpjObra').value || obra.cnpj,
         dia, mes:$('mesRecibo').value, ano, valor:formatarMoeda(valorNumero), valorExtenso:numeroParaReais(valorNumero).toUpperCase(), servico:$('servicoRecibo').value.trim(),
         descricao:montarDescricao(descricaoUsada, p.referencia), nome:nomeCompleto, cpf:formatarCpf(p.cpf), nascimento:limparTexto(p.nascimento), pix:limparTexto(p.pix), referencia:limparTexto(p.referencia), observacaoIndividual:(p.observacao||'').trim(),
-        fileName:`Recibo Nº ${p.numero} - ${ano} - ${nomeCompletoArquivo(p.nome)}.docx`
+        fileName:`Recibo ${p.numero} - ${ano} - ${nomeCompletoArquivo(p.nome)}.docx`
       };
       files.push({ name:rec.fileName, data:criarReciboDocx(rec) });
       return rec;
